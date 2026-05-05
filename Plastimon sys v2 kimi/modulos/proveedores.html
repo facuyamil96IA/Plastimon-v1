@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Proveedores — Plastimon SYS</title>
+<link rel="stylesheet" href="../shared/plastimon.css">
+<style>
+
+  /* ── Vistas ── */
+  .vista { display: none; flex-direction: column; flex: 1; animation: fadeUp 0.3s ease both; }
+  .vista.active { display: flex; }
+
+  /* ── Header pill fijo ── */
+  .mod-header {
+    position: fixed;
+    top: 18px; left: 50%; transform: translateX(-50%);
+    width: calc(min(390px, 100vw) - 36px);
+    z-index: 50;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 36px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.10);
+    height: 62px; padding: 0 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+
+  .mod-back {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.6);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; transition: transform 0.2s;
+  }
+  .mod-back:active { transform: scale(0.9); }
+
+  .mod-title {
+    font-size: 11px; font-weight: 900; letter-spacing: 0.18em;
+    text-transform: uppercase; color: #050514; flex: 1; text-align: center;
+  }
+
+  .mod-action {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #050514; border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; transition: background 0.2s;
+  }
+  .mod-action:active { background: #F05A1A; }
+
+  /* ── Main ── */
+  .mod-main {
+    flex: 1; overflow-y: auto;
+    padding: 104px 18px 130px;
+    display: flex; flex-direction: column; gap: 12px;
+    position: relative; z-index: 10;
+  }
+
+  /* ── Buscador ── */
+  .search-bar {
+    display: flex; gap: 10px; align-items: center;
+  }
+
+  .search-input-wrap {
+    flex: 1;
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 18px;
+    display: flex; align-items: center;
+    padding: 0 14px; gap: 8px; height: 44px;
+  }
+
+  .search-input-wrap input {
+    flex: 1; border: none; background: transparent;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px; font-weight: 600; color: #050514; outline: none;
+  }
+  .search-input-wrap input::placeholder { color: #94a3b8; font-weight: 400; }
+
+  /* ── Card proveedor ── */
+  .prov-card {
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.45);
+    border-radius: 24px; overflow: hidden;
+  }
+
+  .prov-header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px 18px 16px;
+  }
+
+  .prov-avatar {
+    width: 46px; height: 46px; border-radius: 16px;
+    background: rgba(240,90,26,0.10);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    font-size: 18px; font-weight: 900; color: #F05A1A;
+    font-family: 'Arial Black', sans-serif;
+  }
+
+  .prov-info { flex: 1; min-width: 0; }
+
+  .prov-nombre {
+    font-size: 14px; font-weight: 900; color: #050514;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .prov-empresa {
+    font-size: 11px; color: #94a3b8; font-weight: 500; margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .prov-actions {
+    display: flex; gap: 6px; flex-shrink: 0;
+  }
+
+  .act-btn {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .act-btn:active { transform: scale(0.88); }
+  .act-btn.edit   { background: rgba(0,184,196,0.12); }
+  .act-btn.delete { background: rgba(239,68,68,0.10); }
+
+  /* Datos de contacto */
+  .prov-body {
+    padding: 0 18px 18px;
+    display: flex; flex-direction: column; gap: 8px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    padding-top: 14px;
+  }
+
+  .prov-row {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .prov-row-icon {
+    width: 28px; height: 28px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+
+  .prov-row-text {
+    font-size: 12px; font-weight: 600; color: #050514;
+    flex: 1; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .prov-row-label {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: #94a3b8; flex-shrink: 0;
+  }
+
+  /* Chips de estado */
+  .prov-chips {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    padding: 0 18px 16px;
+  }
+
+  .prov-chip {
+    padding: 4px 10px; border-radius: 99px;
+    font-size: 9px; font-weight: 900;
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+
+  .chip-entrega { background: rgba(0,184,196,0.12); color: #0e7490; }
+  .chip-pedido  { background: rgba(139,68,163,0.10); color: #8B44A3; }
+  .chip-notas   { background: rgba(255,204,0,0.15);  color: #b45309; }
+
+  /* ── Empty ── */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 12px; padding: 60px 24px; text-align: center;
+  }
+  .empty-state p { font-size: 13px; color: #94a3b8; font-weight: 600; }
+
+  /* ── Skeleton ── */
+  .skel-card {
+    background: rgba(255,255,255,0.25);
+    border: 1px solid rgba(255,255,255,0.45);
+    border-radius: 24px; padding: 18px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .skel-line { height: 12px; border-radius: 6px; }
+
+  /* ══ VISTA FORMULARIO ══ */
+  .form-main {
+    flex: 1; overflow-y: auto;
+    padding: 104px 18px 130px;
+    display: flex; flex-direction: column; gap: 20px;
+    position: relative; z-index: 10;
+  }
+
+  .form-section {
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.45);
+    border-radius: 24px; padding: 20px;
+    display: flex; flex-direction: column; gap: 18px;
+  }
+
+  .form-section-title {
+    font-size: 9px; font-weight: 900;
+    letter-spacing: 0.2em; text-transform: uppercase; color: #F05A1A;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .form-section-title::before {
+    content: ''; width: 3px; height: 12px;
+    background: #F05A1A; border-radius: 2px; display: inline-block;
+  }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 9px; font-weight: 900;
+    letter-spacing: 0.14em; text-transform: uppercase; color: #94a3b8;
+  }
+  .field label .req { color: #F05A1A; }
+
+  .field input, .field select, .field textarea {
+    background: transparent; border: none;
+    border-bottom: 2px solid #e2e8f0;
+    padding: 8px 0; font-size: 14px; font-weight: 600; color: #050514;
+    outline: none; font-family: system-ui, -apple-system, sans-serif;
+    transition: border-bottom-color 0.2s; width: 100%;
+  }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus  { border-bottom-color: #F05A1A; }
+  .field input::placeholder,
+  .field textarea::placeholder { color: #cbd5e1; font-weight: 400; font-size: 13px; }
+  .field select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 4px center; cursor: pointer;
+  }
+  .field textarea { resize: none; min-height: 72px; line-height: 1.5; }
+  .hint { font-size: 10px; color: #94a3b8; font-style: italic; }
+
+  .btn-guardar {
+    background: #050514; color: #fff; border: none;
+    border-radius: 18px; padding: 16px;
+    font-size: 13px; font-weight: 900;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: opacity 0.2s;
+  }
+  .btn-guardar:disabled { opacity: 0.6; pointer-events: none; }
+  .btn-guardar.loading .btn-text   { display: none; }
+  .btn-guardar.loading .btn-loader { display: inline-block; }
+  .btn-loader { display: none; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 110px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    z-index: 200; padding: 12px 20px; border-radius: 99px;
+    font-size: 12px; font-weight: 700; color: #fff;
+    opacity: 0; transition: all 0.3s ease; white-space: nowrap; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.ok  { background: #00B8C4; }
+  .toast.err { background: #ef4444; }
+
+  /* ── Confirm delete ── */
+  .confirm-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(5,5,20,0.5); backdrop-filter: blur(4px);
+    display: none; align-items: flex-end; justify-content: center;
+    padding: 0 18px 18px;
+  }
+  .confirm-overlay.open { display: flex; }
+
+  .confirm-sheet {
+    background: #fff; border-radius: 28px;
+    padding: 24px 20px 28px; width: 100%; max-width: 390px;
+    display: flex; flex-direction: column; gap: 16px;
+    animation: slideUp 0.3s ease both;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .confirm-title { font-size: 15px; font-weight: 900; color: #050514; }
+  .confirm-text  { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+  .confirm-btns  { display: flex; gap: 10px; }
+  .btn-cancel-confirm {
+    flex: 1; padding: 14px; border-radius: 14px;
+    background: #f1f5f9; border: none; cursor: pointer;
+    font-size: 13px; font-weight: 700; color: #64748b;
+  }
+  .btn-delete-confirm {
+    flex: 1; padding: 14px; border-radius: 14px;
+    background: #ef4444; border: none; cursor: pointer;
+    font-size: 13px; font-weight: 900; color: #fff;
+  }
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+  <div class="glow glow-3"></div>
+
+  <!-- ══ VISTA: LISTA ══ -->
+  <div class="vista active" id="vista-lista">
+
+    <div class="mod-header">
+      <button class="mod-back" onclick="window.location.href='../index.html'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#050514" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <span class="mod-title">Proveedores</span>
+      <button class="mod-action" onclick="abrirForm()" aria-label="Nuevo proveedor">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="mod-main">
+
+      <!-- Buscador -->
+      <div class="search-bar">
+        <div class="search-input-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 21l-4.35-4.35"/><path d="M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0"/>
+          </svg>
+          <input type="text" id="search-input" placeholder="Buscar proveedor..." oninput="onSearch(this.value)" />
+        </div>
+      </div>
+
+      <!-- Lista -->
+      <div id="proveedores-list">
+        <div class="skel-card">
+          <div class="skel-line skeleton" style="width:55%;height:14px;"></div>
+          <div class="skel-line skeleton" style="width:35%;height:10px;"></div>
+        </div>
+        <div class="skel-card">
+          <div class="skel-line skeleton" style="width:70%;height:14px;"></div>
+          <div class="skel-line skeleton" style="width:45%;height:10px;"></div>
+        </div>
+        <div class="skel-card">
+          <div class="skel-line skeleton" style="width:60%;height:14px;"></div>
+          <div class="skel-line skeleton" style="width:30%;height:10px;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /vista-lista -->
+
+
+  <!-- ══ VISTA: FORMULARIO ══ -->
+  <div class="vista" id="vista-form">
+
+    <div class="mod-header">
+      <button class="mod-back" onclick="volverALista()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#050514" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <span class="mod-title" id="form-title">Nuevo Proveedor</span>
+      <div style="width:36px;"></div>
+    </div>
+
+    <div class="form-main">
+
+      <!-- Datos principales -->
+      <div class="form-section">
+        <div class="form-section-title">Datos del proveedor</div>
+
+        <div class="field">
+          <label>Nombre de contacto <span class="req">*</span></label>
+          <input type="text" id="f-nombre" placeholder="Ej: Carlos Rodríguez" />
+        </div>
+
+        <div class="field">
+          <label>Empresa / Razón social</label>
+          <input type="text" id="f-empresa" placeholder="Ej: Distribuidora del Norte S.R.L." />
+        </div>
+
+        <div class="field">
+          <label>Ciudad</label>
+          <input type="text" id="f-ciudad" placeholder="Ej: Resistencia, Chaco" />
+        </div>
+
+        <div class="field">
+          <label>Dirección</label>
+          <input type="text" id="f-direccion" placeholder="Ej: Av. Alvear 1240" />
+        </div>
+      </div>
+
+      <!-- Contacto -->
+      <div class="form-section">
+        <div class="form-section-title">Contacto</div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Teléfono</label>
+            <input type="tel" id="f-telefono" placeholder="+54 9 362..." />
+          </div>
+          <div class="field">
+            <label>WhatsApp</label>
+            <input type="tel" id="f-whatsapp" placeholder="+54 9 362..." />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="f-email" placeholder="proveedor@empresa.com" />
+        </div>
+      </div>
+
+      <!-- Logística -->
+      <div class="form-section">
+        <div class="form-section-title">Logística</div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Tiempo de entrega (días)</label>
+            <input type="number" id="f-tiempo" placeholder="Ej: 3" min="0" />
+          </div>
+          <div class="field">
+            <label>Último pedido</label>
+            <input type="date" id="f-ultimo-pedido" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Notas</label>
+          <textarea id="f-notas" placeholder="Condiciones de pago, mínimo de compra, descuentos, horarios de atención..."></textarea>
+          <span class="hint">Cualquier info útil para cuando hagas el próximo pedido</span>
+        </div>
+      </div>
+
+      <!-- Guardar -->
+      <button class="btn-guardar" id="btn-guardar" onclick="guardar()">
+        <span class="btn-text">Guardar proveedor →</span>
+        <span class="btn-loader spinner"></span>
+      </button>
+
+    </div>
+  </div><!-- /vista-form -->
+
+
+  <!-- ── Bottom Nav ── -->
+  <nav id="bottom-nav">
+    <button class="nav-item" onclick="window.location.href='ventas.html'">
+      <div class="nav-icon-wrap">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+      </div>
+      <span class="nav-label">Venta</span>
+    </button>
+
+    <button class="nav-item" onclick="window.location.href='stock.html'">
+      <div class="nav-icon-wrap">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <path d="M3.27 6.96L12 12.01l8.73-5.05"/><path d="M12 22.08V12"/>
+        </svg>
+      </div>
+      <span class="nav-label">Stock</span>
+    </button>
+
+    <button class="nav-item" onclick="window.location.href='../index.html'">
+      <div class="nav-icon-wrap">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <span class="nav-label">Inicio</span>
+    </button>
+
+    <button class="nav-item" onclick="window.location.href='clientes.html'">
+      <div class="nav-icon-wrap">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <span class="nav-label">Cli</span>
+    </button>
+
+    <button class="nav-item active">
+      <div class="nav-icon-wrap" style="color:#050514;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/>
+          <path d="M5.5 21a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
+          <path d="M18.5 21a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
+        </svg>
+      </div>
+      <span class="nav-label" style="color:#050514;">Prov</span>
+    </button>
+  </nav>
+
+  <!-- ── Confirm delete ── -->
+  <div class="confirm-overlay" id="confirm-overlay">
+    <div class="confirm-sheet">
+      <div class="confirm-title" id="confirm-title">¿Eliminar proveedor?</div>
+      <div class="confirm-text">Esta acción desactiva el proveedor. Los productos asociados no se eliminan.</div>
+      <div class="confirm-btns">
+        <button class="btn-cancel-confirm" onclick="cerrarConfirm()">Cancelar</button>
+        <button class="btn-delete-confirm" id="btn-delete-confirm">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Toast ── -->
+  <div class="toast" id="toast"></div>
+
+</div><!-- /app -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../shared/db.js"></script>
+<script src="../shared/auth.js"></script>
+<script>
+
+// ── Estado ────────────────────────────────────────────────────
+let allProveedores  = [];
+let searchQ         = '';
+let editingId       = null;
+let pendingDeleteId = null;
+
+// ── Init ──────────────────────────────────────────────────────
+(async () => {
+  const session = await Auth.getSession();
+  if (!session) { window.location.href = '../login.html'; return; }
+  document.getElementById('app').style.visibility = 'visible';
+  await cargar();
+})();
+
+// ── Cargar ────────────────────────────────────────────────────
+async function cargar() {
+  const { data, error } = await DB.proveedores.getAll();
+  if (error) { mostrarToast('Error al cargar proveedores', 'err'); return; }
+  allProveedores = data || [];
+  render();
+}
+
+// ── Render ────────────────────────────────────────────────────
+function render() {
+  const list = document.getElementById('proveedores-list');
+
+  let filtrados = allProveedores;
+  if (searchQ) {
+    const q = searchQ.toLowerCase();
+    filtrados = filtrados.filter(p =>
+      p.nombre?.toLowerCase().includes(q) ||
+      p.empresa?.toLowerCase().includes(q) ||
+      p.ciudad?.toLowerCase().includes(q)
+    );
+  }
+
+  if (filtrados.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/>
+          <path d="M5.5 21a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
+          <path d="M18.5 21a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
+        </svg>
+        <p>${searchQ ? 'No se encontraron proveedores' : 'Todavía no hay proveedores'}</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = filtrados.map(p => renderCard(p)).join('');
+}
+
+function renderCard(p) {
+  // Inicial del nombre para el avatar
+  const inicial = (p.nombre || '?').charAt(0).toUpperCase();
+
+  // Días desde último pedido
+  let diasDesdeUltimo = null;
+  if (p.ultimo_pedido) {
+    const diff = Math.floor((Date.now() - new Date(p.ultimo_pedido)) / 86400000);
+    diasDesdeUltimo = diff;
+  }
+
+  return `
+    <div class="prov-card">
+      <div class="prov-header">
+        <div class="prov-avatar">${inicial}</div>
+        <div class="prov-info">
+          <div class="prov-nombre">${p.nombre}</div>
+          <div class="prov-empresa">${p.empresa || p.ciudad || '—'}</div>
+        </div>
+        <div class="prov-actions">
+          <button class="act-btn edit" onclick="abrirForm('${p.id}')" title="Editar">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00B8C4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="act-btn delete" onclick="confirmarEliminar('${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="prov-body">
+        ${p.telefono || p.whatsapp ? `
+        <div class="prov-row">
+          <div class="prov-row-icon" style="background:rgba(0,184,196,0.10);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00B8C4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.65 3.4 2 2 0 0 1 3.62 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l1.68-1.68a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+          </div>
+          <span class="prov-row-text">${p.whatsapp || p.telefono}</span>
+          <span class="prov-row-label">WA / Tel</span>
+        </div>` : ''}
+
+        ${p.email ? `
+        <div class="prov-row">
+          <div class="prov-row-icon" style="background:rgba(139,68,163,0.10);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B44A3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+          </div>
+          <span class="prov-row-text">${p.email}</span>
+          <span class="prov-row-label">Email</span>
+        </div>` : ''}
+
+        ${p.direccion || p.ciudad ? `
+        <div class="prov-row">
+          <div class="prov-row-icon" style="background:rgba(255,204,0,0.12);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <span class="prov-row-text">${[p.direccion, p.ciudad].filter(Boolean).join(', ')}</span>
+          <span class="prov-row-label">Dirección</span>
+        </div>` : ''}
+      </div>
+
+      <!-- Chips informativos -->
+      <div class="prov-chips">
+        ${p.tiempo_entrega_dias != null ? `
+          <span class="prov-chip chip-entrega">⏱ ${p.tiempo_entrega_dias} día${p.tiempo_entrega_dias !== 1 ? 's' : ''} entrega</span>` : ''}
+        ${diasDesdeUltimo != null ? `
+          <span class="prov-chip chip-pedido">📦 Último pedido hace ${diasDesdeUltimo} días</span>` : ''}
+        ${p.notas ? `
+          <span class="prov-chip chip-notas">📝 ${p.notas.slice(0, 30)}${p.notas.length > 30 ? '...' : ''}</span>` : ''}
+      </div>
+
+    </div>`;
+}
+
+// ── Búsqueda ──────────────────────────────────────────────────
+function onSearch(val) {
+  searchQ = val.trim();
+  render();
+}
+
+// ── Navegación ────────────────────────────────────────────────
+function mostrarVista(id) {
+  document.querySelectorAll('.vista').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function volverALista() { mostrarVista('vista-lista'); }
+
+// ── Formulario ────────────────────────────────────────────────
+function abrirForm(id = null) {
+  editingId = id;
+  document.getElementById('form-title').textContent = id ? 'Editar Proveedor' : 'Nuevo Proveedor';
+
+  // Limpiar
+  ['f-nombre','f-empresa','f-ciudad','f-direccion',
+   'f-telefono','f-whatsapp','f-email','f-tiempo','f-ultimo-pedido','f-notas']
+    .forEach(fid => { const el = document.getElementById(fid); if(el) el.value = ''; });
+
+  if (id) {
+    const p = allProveedores.find(x => x.id === id);
+    if (p) {
+      document.getElementById('f-nombre').value        = p.nombre || '';
+      document.getElementById('f-empresa').value       = p.empresa || '';
+      document.getElementById('f-ciudad').value        = p.ciudad || '';
+      document.getElementById('f-direccion').value     = p.direccion || '';
+      document.getElementById('f-telefono').value      = p.telefono || '';
+      document.getElementById('f-whatsapp').value      = p.whatsapp || '';
+      document.getElementById('f-email').value         = p.email || '';
+      document.getElementById('f-tiempo').value        = p.tiempo_entrega_dias ?? '';
+      document.getElementById('f-ultimo-pedido').value = p.ultimo_pedido || '';
+      document.getElementById('f-notas').value         = p.notas || '';
+    }
+  }
+
+  mostrarVista('vista-form');
+}
+
+async function guardar() {
+  const nombre = document.getElementById('f-nombre').value.trim();
+  if (!nombre) { mostrarToast('Ingresá el nombre del proveedor', 'err'); return; }
+
+  const btn = document.getElementById('btn-guardar');
+  btn.classList.add('loading'); btn.disabled = true;
+
+  try {
+    const gv  = id => document.getElementById(id)?.value.trim() || null;
+    const gvn = id => { const v = document.getElementById(id)?.value; return v ? parseInt(v) : null; };
+
+    const payload = {
+      nombre,
+      empresa:             gv('f-empresa'),
+      ciudad:              gv('f-ciudad'),
+      direccion:           gv('f-direccion'),
+      telefono:            gv('f-telefono'),
+      whatsapp:            gv('f-whatsapp'),
+      email:               gv('f-email'),
+      tiempo_entrega_dias: gvn('f-tiempo'),
+      ultimo_pedido:       gv('f-ultimo-pedido'),
+      notas:               gv('f-notas'),
+      activo:              true,
+    };
+    if (editingId) payload.id = editingId;
+
+    const { error } = await DB.proveedores.save(payload);
+    if (error) throw error;
+
+    mostrarToast(editingId ? 'Proveedor actualizado ✓' : 'Proveedor creado ✓', 'ok');
+    await cargar();
+    setTimeout(volverALista, 800);
+  } catch(e) {
+    mostrarToast('Error: ' + (e.message || 'Intentá de nuevo'), 'err');
+  } finally {
+    btn.classList.remove('loading'); btn.disabled = false;
+  }
+}
+
+// ── Eliminar ──────────────────────────────────────────────────
+function confirmarEliminar(id, nombre) {
+  pendingDeleteId = id;
+  document.getElementById('confirm-title').textContent = `¿Eliminar a "${nombre}"?`;
+  document.getElementById('confirm-overlay').classList.add('open');
+  document.getElementById('btn-delete-confirm').onclick = ejecutarEliminar;
+}
+
+function cerrarConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  pendingDeleteId = null;
+}
+
+async function ejecutarEliminar() {
+  cerrarConfirm();
+  try {
+    const { error } = await DB.proveedores.remove(pendingDeleteId);
+    if (error) throw error;
+    mostrarToast('Proveedor eliminado', 'ok');
+    await cargar();
+  } catch(e) {
+    mostrarToast('Error al eliminar', 'err');
+  }
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function mostrarToast(msg, tipo = 'ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${tipo} show`;
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+</script>
+</body>
+</html>
